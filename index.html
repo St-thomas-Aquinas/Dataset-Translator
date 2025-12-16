@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NLLB Translator</title>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- DOCX -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --border: #e0e0e0;
+      --text: #111827;
+      --accent: #f59e0b;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 30px;
+      color: var(--text);
+    }
+
+    .container { max-width: 950px; margin: auto; }
+
+    h1 { text-align: center; margin-bottom: 30px; color: var(--primary); }
+
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      background: var(--card);
+      border-radius: 10px 10px 0 0;
+      margin-right: 4px;
+      transition: background 0.2s ease;
+    }
+
+    .tab.active { background: var(--primary); color: white; }
+
+    .card {
+      background: var(--card);
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    label { font-weight: 600; display: block; margin-top: 15px; }
+
+    textarea, select, input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: border 0.2s ease;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    button {
+      margin-top: 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 18px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+    .result-wrapper { position: relative; margin-top: 18px; }
+
+    .output {
+      min-height: 300px;
+      max-height: 450px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      background: #f9fafb;
+    }
+
+    .fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.9;
+      transition: opacity 0.2s ease, transform 0.1s ease;
+    }
+
+    .fullscreen-btn:hover { opacity: 1; transform: scale(1.1); }
+
+    .fullscreen {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999;
+      border-radius: 0 !important;
+      max-height: none !important;
+      padding: 20px;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid white;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+
+    footer { text-align: center; font-size: 14px; opacity: 0.7; margin-top: 40px; }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>MUT TECH COMMUNITY NLLB Translator</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="textTab" onclick="showTab('text')">Text Translation</div>
+    <div class="tab" id="docTab" onclick="showTab('doc')"> Document Translation</div>
+  </div>
+
+  <!-- Text Translation Card -->
+  <div class="card" id="textCard">
+    <label>Enter Text</label>
+    <textarea id="inputText" placeholder="Type or paste text here..."></textarea>
+
+    <label>Target Language</label>
+    <select id="targetLang">
+      <optgroup label="🇰🇪 Kenyan Languages">
+        <option value="swa_Latn">Swahili</option>
+        <option value="kik_Latn">Kikuyu</option>
+        <option value="luo_Latn">Dholuo</option>
+        <option value="kam_Latn">Kamba</option>
+        <option value="luy_Latn">Luhya</option>
+        <option value="kln_Latn">Kalenjin</option>
+        <option value="mas_Latn">Maasai</option>
+      </optgroup>
+      <optgroup label="🌍 Global Languages">
+        <option value="eng_Latn">English</option>
+        <option value="fra_Latn">French</option>
+        <option value="spa_Latn">Spanish</option>
+        <option value="deu_Latn">German</option>
+        <option value="ara_Arab">Arabic</option>
+        <option value="hin_Deva">Hindi</option>
+        <option value="zho_Hans">Chinese</option>
+      </optgroup>
+    </select>
+
+    <button id="translateTextBtn" onclick="translateText()">
+      Translate Text
+      <span class="loading" style="display:none;" id="textLoading"></span>
+    </button>
+
+    <div class="result-wrapper">
+      <button class="fullscreen-btn" onclick="toggleFullscreen('outputText')">⛶</button>
+      <textarea id="outputText" class="output" readonly></textarea>
+    </div>
+  </div>
+
+  <!-- Document Translation Card -->
+  <div class="card" id="docCard" style="display:none;">
+    <label>Upload Document (.txt, .pdf, .docx)</label>
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+
+    <button id="translateDocBtn" onclick="translateDocument()">
+       Translate Document
+      <span class="loading" style="display:none;" id="docLoading"></span>
+    </button>
+
+    <div class="result-wrapper">
+      <button class="fullscreen-btn" onclick="toggleFullscreen('fileStatus')">⛶</button>
+      <textarea id="fileStatus" class="output" readonly></textarea>
+    </div>
+  </div>
+
+  <footer>
+    Powered by Meta NLLB-600 • Hugging Face
+  </footer>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
