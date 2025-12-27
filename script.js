@@ -1,48 +1,7 @@
-const HF_API =
-  "https://st-thomas-of-aquinas-no-language-left-behind-api.hf.space/translate";
-
-const DEFAULT_SOURCE = "auto";
-
-/* ---------- Tabs ---------- */
-function showTab(tab) {
-  const textCard = document.getElementById("textCard");
-  const docCard = document.getElementById("docCard");
-  const textTab = document.getElementById("textTab");
-  const docTab = document.getElementById("docTab");
-
-  if(tab === 'text') {
-    textCard.style.display = 'block';
-    docCard.style.display = 'none';
-    textTab.classList.add('active');
-    docTab.classList.remove('active');
-  } else {
-    textCard.style.display = 'none';
-    docCard.style.display = 'block';
-    textTab.classList.remove('active');
-    docTab.classList.add('active');
-  }
-}
-
-/* ---------- Chunking Function ---------- */
-function chunkText(text, maxLength = 500) {
-  const chunks = [];
-  let start = 0;
-  while (start < text.length) {
-    let end = start + maxLength;
-    if (end < text.length) {
-      const lastSpace = text.lastIndexOf(" ", end);
-      if (lastSpace > start) end = lastSpace;
-    }
-    chunks.push(text.slice(start, end).trim());
-    start = end;
-  }
-  return chunks;
-}
-
-/* ---------- Text Translation ---------- */
 async function translateText() {
   const text = document.getElementById("inputText").value.trim();
   const target = document.getElementById("targetLang").value;
+  const source = document.getElementById("sourceLang").value; // New
   const output = document.getElementById("outputText");
   const loading = document.getElementById("textLoading");
   const btn = document.getElementById("translateTextBtn");
@@ -60,7 +19,7 @@ async function translateText() {
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
-    const chunkTranslation = await translateWithNLLB(chunks[i], target);
+    const chunkTranslation = await translateWithNLLB(chunks[i], source, target);
     translatedText += chunkTranslation + "\n\n";
   }
 
@@ -69,10 +28,10 @@ async function translateText() {
   btn.disabled = false;
 }
 
-/* ---------- Document Translation ---------- */
 async function translateDocument() {
   const file = document.getElementById("fileInput").files[0];
   const target = document.getElementById("targetLang").value;
+  const source = document.getElementById("sourceLang").value; // New
   const status = document.getElementById("fileStatus");
   const loading = document.getElementById("docLoading");
   const btn = document.getElementById("translateDocBtn");
@@ -115,7 +74,7 @@ async function translateDocument() {
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
-    const chunkTranslation = await translateWithNLLB(chunks[i], target);
+    const chunkTranslation = await translateWithNLLB(chunks[i], source, target);
     translatedText += chunkTranslation + "\n\n";
   }
 
@@ -127,14 +86,14 @@ async function translateDocument() {
 }
 
 /* ---------- API ---------- */
-async function translateWithNLLB(text, targetLang) {
+async function translateWithNLLB(text, sourceLang, targetLang) {
   try {
     const response = await fetch(HF_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
-        source_lang: DEFAULT_SOURCE,
+        source_lang: sourceLang,  // use selected source
         target_lang: targetLang
       })
     });
@@ -143,28 +102,5 @@ async function translateWithNLLB(text, targetLang) {
   } catch (e) {
     console.error(e);
     return "⚠️ API error.";
-  }
-}
-
-/* ---------- Download ---------- */
-function downloadFile(text, originalName) {
-  const blob = new Blob([text], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "translated_" + originalName.replace(/\.\w+$/, ".txt");
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* ---------- Fullscreen ---------- */
-function toggleFullscreen(id) {
-  const el = document.getElementById(id);
-  if (!document.fullscreenElement) {
-    el.classList.add("fullscreen");
-    el.requestFullscreen();
-  } else {
-    el.classList.remove("fullscreen");
-    document.exitFullscreen();
   }
 }
