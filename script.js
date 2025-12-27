@@ -1,7 +1,7 @@
 const HF_API =
   "https://st-thomas-of-aquinas-no-language-left-behind-api.hf.space/translate";
 
-const DEFAULT_SOURCE = "eng_Latn";
+const DEFAULT_SOURCE = "auto";
 
 /* ---------- Tabs ---------- */
 function showTab(tab) {
