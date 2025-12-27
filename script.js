@@ -20,19 +20,29 @@ function showTab(tab) {
   }
 }
 
-/* ---------- Chunking Function ---------- */
-function chunkText(text, maxLength = 500) {
+/* ---------- Safe Chunking Function ---------- */
+function chunkTextSafe(text, maxLength = 500) {
   const chunks = [];
   let start = 0;
+
   while (start < text.length) {
-    let end = start + maxLength;
+    let end = Math.min(start + maxLength, text.length);
+
+    // Avoid splitting words
     if (end < text.length) {
       const lastSpace = text.lastIndexOf(" ", end);
       if (lastSpace > start) end = lastSpace;
     }
-    chunks.push(text.slice(start, end).trim());
+
+    const chunk = text.slice(start, end);
+    chunks.push(chunk);
+
     start = end;
+
+    // Skip spaces and newlines at the start of next chunk
+    while (text[start] === " " || text[start] === "\n") start++;
   }
+
   return chunks;
 }
 
@@ -54,7 +64,7 @@ async function translateText() {
   btn.disabled = true;
   output.value = "";
 
-  const chunks = chunkText(text, 500);
+  const chunks = chunkTextSafe(text, 500);
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
@@ -115,7 +125,7 @@ async function translateDocument() {
 
   status.value = `🌍 Translating document...`;
 
-  const chunks = chunkText(text, 500);
+  const chunks = chunkTextSafe(text, 500);
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
