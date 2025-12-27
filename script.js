@@ -20,29 +20,24 @@ function showTab(tab) {
   }
 }
 
-/* ---------- Safe Chunking Function ---------- */
-function chunkTextSafe(text, maxLength = 500) {
+/* ---------- Smart Sentence-based Chunking with Overlap ---------- */
+function chunkBySentences(text, maxLength = 500, overlap = 50) {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
   const chunks = [];
-  let start = 0;
+  let current = "";
 
-  while (start < text.length) {
-    let end = Math.min(start + maxLength, text.length);
-
-    // Avoid splitting words
-    if (end < text.length) {
-      const lastSpace = text.lastIndexOf(" ", end);
-      if (lastSpace > start) end = lastSpace;
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i].trim();
+    if ((current + " " + sentence).length > maxLength) {
+      if (current) chunks.push(current.trim());
+      // Start new chunk with overlap
+      const overlapText = current.slice(-overlap);
+      current = overlapText + " " + sentence;
+    } else {
+      current += (current ? " " : "") + sentence;
     }
-
-    const chunk = text.slice(start, end);
-    chunks.push(chunk);
-
-    start = end;
-
-    // Skip spaces and newlines at the start of next chunk
-    while (text[start] === " " || text[start] === "\n") start++;
   }
-
+  if (current) chunks.push(current.trim());
   return chunks;
 }
 
@@ -64,7 +59,7 @@ async function translateText() {
   btn.disabled = true;
   output.value = "";
 
-  const chunks = chunkTextSafe(text, 500);
+  const chunks = chunkBySentences(text, 500, 50);
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
@@ -125,7 +120,7 @@ async function translateDocument() {
 
   status.value = `🌍 Translating document...`;
 
-  const chunks = chunkTextSafe(text, 500);
+  const chunks = chunkBySentences(text, 500, 50);
   let translatedText = "";
 
   for (let i = 0; i < chunks.length; i++) {
