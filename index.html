@@ -6,9 +6,10 @@
 
   <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
   <!-- DOCX -->
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <!-- PapaParse for robust CSV handling -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
@@ -32,7 +33,6 @@
     }
 
     .container { max-width: 950px; margin: auto; }
-
     h1 { text-align: center; margin-bottom: 30px; color: var(--primary); }
 
     .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
@@ -71,6 +71,7 @@
       border-radius: 8px;
       border: 1px solid var(--border);
       transition: border 0.2s ease;
+      box-sizing: border-box; /* Ensures padding doesn't break width */
     }
 
     textarea:focus, input:focus, select:focus {
@@ -94,6 +95,7 @@
     }
 
     button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    button:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
 
     .result-wrapper { position: relative; margin-top: 18px; }
 
@@ -140,8 +142,8 @@
 
     .loading {
       display: inline-block;
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       border: 3px solid white;
       border-top: 3px solid var(--primary);
       border-radius: 50%;
@@ -162,7 +164,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" id="textTab" onclick="showTab('text')">Text Translation</div>
-    <div class="tab" id="docTab" onclick="showTab('doc')"> Document Translation</div>
+    <div class="tab" id="docTab" onclick="showTab('doc')">Document Translation</div>
   </div>
 
   <!-- Text Translation Card -->
@@ -224,8 +226,8 @@
 
   <!-- Document Translation Card -->
   <div class="card" id="docCard" style="display:none;">
-    <label>Upload Document (.txt, .pdf, .docx)</label>
-    <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+    <label>Upload Document (.txt, .pdf, .docx, .csv)</label>
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx,.csv">
 
     <button id="translateDocBtn" onclick="translateDocument()">
        Translate Document
