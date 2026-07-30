@@ -1,5 +1,5 @@
 // ⚠️ UPDATE THIS: Point to your actual FastAPI backend URL 
-const API_BASE_URL = "http://localhost:8000"; 
+const API_BASE_URL = "https://st-thomas-of-aquinas-no-language-left-behind-api.hf.space"; 
 
 /* ---------- Tabs ---------- */
 function showTab(tab) {
